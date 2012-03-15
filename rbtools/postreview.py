@@ -957,7 +957,7 @@ def parse_options(args):
 
     parser.add_option("-p", "--publish",
                       dest="publish", action="store_true",
-                      default=get_config_value(configs, 'PUBLISH', False),
+                      default=get_config_value(configs, 'PUBLISH', True),
                       help="publish the review request immediately after "
                            "submitting")
     parser.add_option("-r", "--review-request-id",
@@ -1019,13 +1019,13 @@ def parse_options(args):
     parser.add_option("--guess-summary",
                       dest="guess_summary", action="store_true",
                       default=get_config_value(configs, 'GUESS_SUMMARY',
-                                               False),
+                                               True),
                       help="guess summary from the latest commit (git/"
                            "hg/hgsubversion only)")
     parser.add_option("--guess-description",
                       dest="guess_description", action="store_true",
                       default=get_config_value(configs, 'GUESS_DESCRIPTION',
-                                               False),
+                                               True),
                       help="guess description based on commits on this branch "
                            "(git/hg/hgsubversion only)")
     parser.add_option("--testing-done",
