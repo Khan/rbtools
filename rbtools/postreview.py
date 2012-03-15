@@ -1133,6 +1133,10 @@ def parse_options(args):
 
     (globals()["options"], args) = parser.parse_args(args)
 
+    if options.debug:
+        import logging
+        logging.getLogger().setLevel(logging.DEBUG)
+
     if options.description and options.description_file:
         sys.stderr.write("The --description and --description-file options "
                          "are mutually exclusive.\n")
