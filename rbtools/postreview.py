@@ -877,6 +877,8 @@ def tempt_fate(server, tool, changenum, diff_content=None,
             server.set_review_request_field(review_request, 'bugs_closed',
                                             options.bugs_closed)
 
+        raise Exception("description: '%s', change_description: '%s'" % (options.description, options.change_description)) #!!
+
         if options.description:
             server.set_review_request_field(review_request, 'description',
                                             options.description)

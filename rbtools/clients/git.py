@@ -24,6 +24,29 @@ class GitClient(SCMClient):
         """ Strips prefix from ref name, if possible """
         return re.sub(r'^refs/heads/', '', ref)
 
+    def _set_guesses(self, summary_log_revrange, description_log_revrange):
+        """ Sets summary/descr/etc if needed and --guess-foo is specified """
+        if self.options.guess_summary and not self.options.summary:
+            s = execute([self.git, "log", "--pretty=format:%s",
+                         summary_log_revrange],
+                        ignore_errors=True)
+            self.options.summary = s.replace('\n', ' ').strip()
+
+        if self.options.guess_description and not self.options.description:
+            self.options.description = execute(
+                [self.git, "log", "--pretty=format:%s%n%n%b",
+                 description_log_revrange],
+                ignore_errors=True).strip()
+
+        # When updating an existing review, we use the description
+        # to set the 'update' comment, rather than the overall
+        # description.
+        if self.options.rid and not self.options.change_description:
+            self.options.change_description = execute(
+                [self.git, "log", "--pretty=format:%s%n%n%b",
+                 description_log_revrange],
+                ignore_errors=True).strip()
+
     def get_repository_info(self):
         if not check_install('git --help'):
             # CreateProcess (launched via subprocess, used by check_install)
@@ -234,16 +257,7 @@ class GitClient(SCMClient):
             diff_lines = self.make_diff(self.merge_base, self.head_ref)
             parent_diff_lines = None
 
-        if self.options.guess_summary and not self.options.summary:
-            s = execute([self.git, "log", "--pretty=format:%s", "HEAD^.."],
-                              ignore_errors=True)
-            self.options.summary = s.replace('\n', ' ').strip()
-
-        if self.options.guess_description and not self.options.description:
-            self.options.description = execute(
-                [self.git, "log", "--pretty=format:%s%n%n%b",
-                 (parent_branch or self.merge_base) + ".."],
-                ignore_errors=True).strip()
+        self._set_guesses("HEAD^..", (parent_branch or self.merge_base) + "..")
 
         return (diff_lines, parent_diff_lines)
 
@@ -346,27 +360,7 @@ class GitClient(SCMClient):
                 parent_diff_lines = self.make_diff(self.merge_base,
                                                    revision_range)
 
-            if self.options.guess_summary and not self.options.summary:
-                s = execute([self.git, "log", "--pretty=format:%s",
-                             revision_range + ".."], ignore_errors=True)
-                self.options.summary = s.replace('\n', ' ').strip()
-
-            if (self.options.guess_description and
-                not self.options.description):
-                self.options.description = execute(
-                    [self.git, "log", "--pretty=format:%s%n%n%b",
-                     revision_range + ".."],
-                    ignore_errors=True).strip()
-
-            # When updating an existing review, we use the description
-            # to set the 'update' comment, rather than the overall
-            # description.
-            if (self.options.rid and self.options.guess_description and
-                not self.options.change_description):
-                self.options.change_description = execute(
-                    [self.git, "log", "--pretty=format:%s%n%n%b",
-                     revision_range + ".."],
-                    ignore_errors=True).strip()
+            self._set_guesses(revision_range + "..", revision_range + "..")
 
             return (self.make_diff(revision_range), parent_diff_lines)
         else:
@@ -380,16 +374,6 @@ class GitClient(SCMClient):
             if not pdiff_required:
                 parent_diff_lines = self.make_diff(self.merge_base, r1)
 
-            if self.options.guess_summary and not self.options.summary:
-                s = execute([self.git, "log", "--pretty=format:%s",
-                             "%s..%s" % (r1, r2)], ignore_errors=True)
-                self.options.summary = s.replace('\n', ' ').strip()
-
-            if (self.options.guess_description and
-                not self.options.description):
-                self.options.description = execute(
-                    [self.git, "log", "--pretty=format:%s%n%n%b",
-                     "%s..%s" % (r1, r2)],
-                    ignore_errors=True).strip()
+            self._set_guesses("%s..%s" % (r1, r2), "%s..%s" % (r1, r2))
 
             return (self.make_diff(r1, r2), parent_diff_lines)
