@@ -41,6 +41,11 @@ class GitClient(SCMClient):
         # When updating an existing review, we use the description
         # to set the 'update' comment, rather than the overall
         # description.
+        # TODO(csilvers): this seems to put all the text since the
+        # last push.  Maybe it *would* be better to update the
+        # 'regular' description instead?
+        # TODO(csilvers): if we keep this, add a --guess-change-description
+        # flag to suppress this behavior.
         if self.options.rid and not self.options.change_description:
             self.options.change_description = execute(
                 [self.git, "log", "--pretty=format:%s%n%n%b",
