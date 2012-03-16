@@ -960,6 +960,9 @@ def parse_options(args):
                       default=get_config_value(configs, 'PUBLISH', True),
                       help="publish the review request immediately after "
                            "submitting")
+    parser.add_option("--no-publish",
+                      dest="publish", action="store_false",
+                      help="Do not publish, ignoring PUBLISH in .reviewboardrc")
     parser.add_option("-r", "--review-request-id",
                       dest="rid", metavar="ID", default=None,
                       help="existing review request ID to update")
@@ -1015,19 +1018,22 @@ def parse_options(args):
                       dest="guess_fields", action="store_true",
                       default=get_config_value(configs, 'GUESS_FIELDS',
                                                False),
-                      help="equivalent to --guess-summary --guess-description")
+                      help="equivalent to --guess-summary --guess-description"
+                           " (is always true unless -r is set)")
     parser.add_option("--guess-summary",
                       dest="guess_summary", action="store_true",
                       default=get_config_value(configs, 'GUESS_SUMMARY',
-                                               True),
-                      help="guess summary from the latest commit (git/"
-                           "hg/hgsubversion only)")
+                                               False),
+                      help="guess summary from the latest commit "
+                           "(git/hg/hgsubversion only) -- even when using -r "
+                           "(is always true unless -r is set)")
     parser.add_option("--guess-description",
                       dest="guess_description", action="store_true",
                       default=get_config_value(configs, 'GUESS_DESCRIPTION',
-                                               True),
+                                               False),
                       help="guess description based on commits on this branch "
-                           "(git/hg/hgsubversion only)")
+                           "(git/hg/hgsubversion only) -- even when using -r "
+                           "(is always true unless -r is set)")
     parser.add_option("--testing-done",
                       dest="testing_done", default=None,
                       help="details of testing done ")
@@ -1152,9 +1158,12 @@ def parse_options(args):
                              options.description_file)
             sys.exit(1)
 
-    if options.guess_fields:
+    if options.guess_fields or not options.rid:
         options.guess_summary = True
         options.guess_description = True
+
+    if options.output_diff_only:
+        options.publish = False    # publish doesn't make sense in this case
 
     if options.testing_done and options.testing_file:
         sys.stderr.write("The --testing-done and --testing-done-file options "
@@ -1183,7 +1192,7 @@ def parse_options(args):
 
     if options.publish and not options.target_people:
         sys.stderr.write("Must specify reviewers (--target-people=...) or "
-                         " turn off auto-publish via --publish=false\n")
+                         "turn off auto-publish via --no-publish\n")
         sys.exit(1)
         
 

@@ -358,6 +358,10 @@ class GitClient(SCMClient):
                      revision_range + ".."],
                     ignore_errors=True).strip()
 
+            # TODO(csilvers): if -r and --guess-summary are set, but
+            # --change-description isn't, set --change-description
+            # based on git log --pretty=format:%s
+
             return (self.make_diff(revision_range), parent_diff_lines)
         else:
             r1, r2 = revision_range.split(":")
