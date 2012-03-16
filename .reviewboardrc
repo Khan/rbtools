@@ -1,1 +1,2 @@
 REVIEWBOARD_URL = "http://reviewboard.khanacademy.org"
+BRANCH = "master"
