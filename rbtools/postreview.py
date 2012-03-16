@@ -1005,6 +1005,9 @@ def parse_options(args):
                       default=get_config_value(configs, 'TARGET_PEOPLE'),
                       help="names of the people who will perform "
                            "the review")
+    parser.add_option("--rr",
+                      dest="target_people",
+                      help="alias for --target-people")
     parser.add_option("--summary",
                       dest="summary", default=None,
                       help="summary of the review ")
