@@ -358,9 +358,15 @@ class GitClient(SCMClient):
                      revision_range + ".."],
                     ignore_errors=True).strip()
 
-            # TODO(csilvers): if -r and --guess-summary are set, but
-            # --change-description isn't, set --change-description
-            # based on git log --pretty=format:%s
+            # When updating an existing review, we use the description
+            # to set the 'update' comment, rather than the overall
+            # description.
+            if (self.options.rid and self.options.guess_description and
+                not self.options.change_description):
+                self.options.change_description = execute(
+                    [self.git, "log", "--pretty=format:%s%n%n%b",
+                     revision_range + ".."],
+                    ignore_errors=True).strip()
 
             return (self.make_diff(revision_range), parent_diff_lines)
         else:
