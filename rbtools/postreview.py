@@ -1194,7 +1194,7 @@ def parse_options(args):
         sys.exit(1)
 
     if options.publish and not options.target_people:
-        sys.stderr.write("Must specify reviewers (--target-people=...) or "
+        sys.stderr.write("Must specify reviewers (--rr=...) or "
                          "turn off auto-publish via --no-publish\n")
         sys.exit(1)
 
