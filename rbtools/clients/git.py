@@ -24,15 +24,15 @@ class GitClient(SCMClient):
         """ Strips prefix from ref name, if possible """
         return re.sub(r'^refs/heads/', '', ref)
 
-    def _set_guesses(self, start, end):
+    def _set_guesses(self, start_rev, end_rev):
         """ Sets summary/descr/etc if needed and --guess-foo is specified """
         if self.options.guess_summary and not self.options.summary:
-            # Merge ranges are specified (start, end] -- that is,
-            # everything *after* start.  We want the summary, then, to be
-            # the first commit after start.  That child is the first word
-            # printed in the below command.
+            # Merge ranges are specified (start_rev, end_rev] -- that
+            # is, everything *after* start_rev.  We want the summary,
+            # then, to be the first commit after start_rev.  That
+            # child is the first word printed in the below command.
             first_commit = execute([self.git, "rev-list", "--reverse",
-                                    "--parents", "^%s" % start,
+                                    "--parents", "^%s" % start_rev,
                                     self.head_ref]).split(' ', 2)[0]
             # I believe "foo ^foo^ is the syntax for *only* printing foo's msg.
             s = execute([self.git, "log", "--no-merges", "--pretty=format:%s",
@@ -43,7 +43,7 @@ class GitClient(SCMClient):
         if self.options.guess_description and not self.options.description:
             self.options.description = execute(
                 [self.git, "log", "--pretty=format:%s%n%n%b",
-                 "%s..%s" % (start, end)],
+                 "%s..%s" % (start_rev, end_rev)],
                 ignore_errors=True).strip()
 
 
