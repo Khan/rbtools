@@ -28,7 +28,7 @@ class GitClient(SCMClient):
         """ Sets summary/descr/etc if needed and --guess-foo is specified """
         # I believe "foo ^foo^ is the syntax for *only* printing foo's msg.
         if self.options.guess_summary and not self.options.summary:
-            s = execute([self.git, "log", "--pretty=format:%s",
+            s = execute([self.git, "log", "--no-merges", "--pretty=format:%s",
                          first_commit, "^%s^" % first_commit],
                         ignore_errors=True)
             self.options.summary = s.replace('\n', ' ').strip()
@@ -52,8 +52,6 @@ class GitClient(SCMClient):
                 [self.git, "log", "--pretty=format:%s%n%n%b",
                  description_log_revrange],
                 ignore_errors=True).strip()
-
-        raise Exception((self.options.summary, first_commit)) #!!
 
     def _github_paths(self, url):
         """ Given one github path, return a list of all of them """
@@ -279,7 +277,14 @@ class GitClient(SCMClient):
             diff_lines = self.make_diff(self.merge_base, self.head_ref)
             parent_diff_lines = None
 
-        self._set_guesses((parent_branch or self.merge_base),
+        # To guess the summary, we want the first commit on our branch
+        # *after* the merge base.  It's the first word printed in the
+        # below command (the second word will be the merge-base).
+        child_of_merge_base = execute([self.git, "rev-list",
+                                       "--reverse", "--parents",
+                                       "^%s" % (parent_branch or self.merge_base),
+                                       self.head_ref]).split(' ', 2)[0]
+        self._set_guesses(child_of_merge_base,
                           (parent_branch or self.merge_base) + "..")
 
         return (diff_lines, parent_diff_lines)
