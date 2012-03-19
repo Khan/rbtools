@@ -17,7 +17,6 @@ from urlparse import urljoin, urlparse
 # branch 'wins'.  To do that, we add the root of our branch to the
 # beginning of the path.  The root is the directory above us.
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-print sys.path
 
 from rbtools import get_package_version, get_version_string
 from rbtools.api.errors import APIError
