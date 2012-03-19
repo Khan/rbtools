@@ -11,11 +11,13 @@ from optparse import OptionParser
 from pkg_resources import parse_version
 from urlparse import urljoin, urlparse
 
-# The first entry in sys.path is this directory (the one postreview is
-# in).  However, we really want it to be the parent directory (the
-# root of the rbtools directory).  Fix that up here, manually.
-if os.path.samefile(sys.path[0], os.path.dirname(__file__)):
-    sys.path[0] = os.path.dirname(sys.path[0])
+# We may have a problem: rbtools can be installed twice on the system:
+# the 'canonical' rbtools, in /usr/lib or /usr/local/lib somewhere,
+# and our branch of it, which lives here.  We want to make sure our
+# branch 'wins'.  To do that, we add the root of our branch to the
+# beginning of the path.  The root is the directory above us.
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+print sys.path
 
 from rbtools import get_package_version, get_version_string
 from rbtools.api.errors import APIError
