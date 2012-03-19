@@ -54,16 +54,22 @@ class GitClient(SCMClient):
 
     def _github_paths(self, url):
         """ Given one github path, return a list of all of them """
-        github_re = re.compile(r'(.*://)github.com/(.*?)(.git)?$')
+        github_re = re.compile(r'('
+                               r'git@github.com/|'
+                               r'http://([^@]+@)?github.com/|'
+                               r'https://([^@]+@)?github.com/|'
+                               r'git@github.com:'
+                               r')'
+                               r'(?P<repos>.*?)(.git)?$')
         m = github_re.match(url)
         if not m:
             return url    # probably not a github url
-        repos = m.group(2)
         # The code in postreview.py wants this to be a list, not a tuple/etc.
-        return ['http://github.com/%s' % repos,
-                'https://github.com/%s' % repos,
-                'git://github.com/%s' % repos,
-                'git://github.com/%s.git' % repos,
+        return ['http://github.com/%s' % m.group('repos'),
+                'https://github.com/%s' % m.group('repos'),
+                'git://github.com/%s' % m.group('repos'),
+                'git://github.com/%s.git' % m.group('repos'),
+                '
                 ]
 
     def get_repository_info(self):
