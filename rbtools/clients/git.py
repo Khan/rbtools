@@ -52,6 +52,19 @@ class GitClient(SCMClient):
                  description_log_revrange],
                 ignore_errors=True).strip()
 
+    def _github_paths(self, url):
+        """ Given one github path, return a list of all of them """
+        github_re = re.compile(r'(.*://)github.com/(.*?)(.git)?')
+        m = github_re.match(url)
+        if not m:
+            return url    # probably not a github url
+        repos = m.group(2)
+        # The code in postreview.py wants this to be a list, not a tuple/etc.
+        return ['http://github.com/%s' % repos,
+                'git://github.com/%s' % repos,
+                'git://github.com/%s.git' % repos,
+                ]
+
     def get_repository_info(self):
         if not check_install('git --help'):
             # CreateProcess (launched via subprocess, used by check_install)
@@ -189,7 +202,7 @@ class GitClient(SCMClient):
 
         if url:
             self.type = "git"
-            return RepositoryInfo(path=url, base_path='',
+            return RepositoryInfo(path=self._github_paths(url), base_path='',
                                   supports_parent_diffs=True)
 
         return None
