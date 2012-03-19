@@ -24,11 +24,11 @@ class GitClient(SCMClient):
         """ Strips prefix from ref name, if possible """
         return re.sub(r'^refs/heads/', '', ref)
 
-    def _set_guesses(self, summary_log_revrange, description_log_revrange):
+    def _set_guesses(self, first_commit, description_log_revrange):
         """ Sets summary/descr/etc if needed and --guess-foo is specified """
         if self.options.guess_summary and not self.options.summary:
-            s = execute([self.git, "log", "--pretty=format:%s",
-                         summary_log_revrange],
+            s = execute([self.git, "log", "-n1", "--pretty=format:%s",
+                         first_commit],
                         ignore_errors=True)
             self.options.summary = s.replace('\n', ' ').strip()
 
@@ -51,6 +51,8 @@ class GitClient(SCMClient):
                 [self.git, "log", "--pretty=format:%s%n%n%b",
                  description_log_revrange],
                 ignore_errors=True).strip()
+
+        print "Set summary to: " % self.options.summary #!!
 
     def _github_paths(self, url):
         """ Given one github path, return a list of all of them """
@@ -276,7 +278,8 @@ class GitClient(SCMClient):
             diff_lines = self.make_diff(self.merge_base, self.head_ref)
             parent_diff_lines = None
 
-        self._set_guesses("HEAD^..", (parent_branch or self.merge_base) + "..")
+        self._set_guesses((parent_branch or self.merge_base),
+                          (parent_branch or self.merge_base) + "..")
 
         return (diff_lines, parent_diff_lines)
 
@@ -379,7 +382,7 @@ class GitClient(SCMClient):
                 parent_diff_lines = self.make_diff(self.merge_base,
                                                    revision_range)
 
-            self._set_guesses(revision_range + "..", revision_range + "..")
+            self._set_guesses(revision_range, revision_range + "..")
 
             return (self.make_diff(revision_range), parent_diff_lines)
         else:
@@ -393,6 +396,6 @@ class GitClient(SCMClient):
             if not pdiff_required:
                 parent_diff_lines = self.make_diff(self.merge_base, r1)
 
-            self._set_guesses("%s..%s" % (r1, r2), "%s..%s" % (r1, r2))
+            self._set_guesses(r1, "%s..%s" % (r1, r2))
 
             return (self.make_diff(r1, r2), parent_diff_lines)
