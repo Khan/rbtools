@@ -1027,23 +1027,22 @@ def parse_options(args):
     parser.add_option('-g', '--guess-fields',
                       dest="guess_fields", action="store_true",
                       default=get_config_value(configs, 'GUESS_FIELDS',
-                                               False),
+                                               True),
                       help="equivalent to --guess-summary --guess-description"
-                           " (is always true unless -r is set)")
+                           " (is always true; to override, put"
+                           " GUESS_FIELDS=False in your .reviewboardrc")
     parser.add_option("--guess-summary",
                       dest="guess_summary", action="store_true",
                       default=get_config_value(configs, 'GUESS_SUMMARY',
                                                False),
-                      help="guess summary from the latest commit "
-                           "(git/hg/hgsubversion only) -- even when using -r "
-                           "(is always true unless -r is set)")
+                      help="guess summary from the first commit "
+                           "(git/hg/hgsubversion only) -- overridable by -g")
     parser.add_option("--guess-description",
                       dest="guess_description", action="store_true",
                       default=get_config_value(configs, 'GUESS_DESCRIPTION',
                                                False),
                       help="guess description based on commits on this branch "
-                           "(git/hg/hgsubversion only) -- even when using -r "
-                           "(is always true unless -r is set)")
+                           "(git/hg/hgsubversion only) -- overridable by -g")
     parser.add_option("--testing-done",
                       dest="testing_done", default=None,
                       help="details of testing done ")
@@ -1168,7 +1167,7 @@ def parse_options(args):
                              options.description_file)
             sys.exit(1)
 
-    if options.guess_fields or not options.rid:
+    if options.guess_fields:
         options.guess_summary = True
         options.guess_description = True
 
