@@ -53,6 +53,9 @@ class GitClient(SCMClient):
                  description_log_revrange],
                 ignore_errors=True).strip()
 
+        raise Exception((self.options.summary, self.options.description, self.options.change_description)) #!!
+
+
     def _github_paths(self, url):
         """ Given one github path, return a list of all of them """
         github_re = re.compile(r'(.*://)github.com/(.*?)(.git)?$')
