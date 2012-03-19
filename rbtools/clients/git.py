@@ -26,9 +26,10 @@ class GitClient(SCMClient):
 
     def _set_guesses(self, first_commit, description_log_revrange):
         """ Sets summary/descr/etc if needed and --guess-foo is specified """
+        # I believe "foo ^foo^ is the syntax for *only* printing foo's msg.
         if self.options.guess_summary and not self.options.summary:
-            s = execute([self.git, "log", "-n1", "--pretty=format:%s",
-                         first_commit],
+            s = execute([self.git, "log", "--pretty=format:%s",
+                         first_commit, "^%s^" % first_commit],
                         ignore_errors=True)
             self.options.summary = s.replace('\n', ' ').strip()
 
@@ -52,7 +53,7 @@ class GitClient(SCMClient):
                  description_log_revrange],
                 ignore_errors=True).strip()
 
-        raise Exception(self.options.summary) #!!
+        raise Exception((self.options.summary, first_commit)) #!!
 
     def _github_paths(self, url):
         """ Given one github path, return a list of all of them """
