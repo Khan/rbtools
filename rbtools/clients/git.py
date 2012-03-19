@@ -52,7 +52,7 @@ class GitClient(SCMClient):
                  description_log_revrange],
                 ignore_errors=True).strip()
 
-        print "Set summary to: " % self.options.summary #!!
+        raise Exception(self.options.summary) #!!
 
     def _github_paths(self, url):
         """ Given one github path, return a list of all of them """
