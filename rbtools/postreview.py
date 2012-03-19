@@ -11,6 +11,12 @@ from optparse import OptionParser
 from pkg_resources import parse_version
 from urlparse import urljoin, urlparse
 
+# The first entry in sys.path is this directory (the one postreview is
+# in).  However, we really want it to be the parent directory (the
+# root of the rbtools directory).  Fix that up here, manually.
+if os.path.samefile(sys.path[0], os.path.dirname(__file__)):
+    sys.path[0] = os.path.dirname(sys.path[0])
+
 from rbtools import get_package_version, get_version_string
 from rbtools.api.errors import APIError
 from rbtools.clients import scan_usable_client
