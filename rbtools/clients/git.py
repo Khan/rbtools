@@ -24,10 +24,17 @@ class GitClient(SCMClient):
         """ Strips prefix from ref name, if possible """
         return re.sub(r'^refs/heads/', '', ref)
 
-    def _set_guesses(self, first_commit, description_log_revrange):
+    def _set_guesses(self, start, end):
         """ Sets summary/descr/etc if needed and --guess-foo is specified """
-        # I believe "foo ^foo^ is the syntax for *only* printing foo's msg.
         if self.options.guess_summary and not self.options.summary:
+            # Merge ranges are specified (start, end] -- that is,
+            # everything *after* start.  We want the summary, then, to be
+            # the first commit after start.  That child is the first word
+            # printed in the below command.
+            first_commit = execute([self.git, "rev-list", "--reverse",
+                                    "--parents", "^%s" % start,
+                                    self.head_ref]).split(' ', 2)[0]
+            # I believe "foo ^foo^ is the syntax for *only* printing foo's msg.
             s = execute([self.git, "log", "--no-merges", "--pretty=format:%s",
                          first_commit, "^%s^" % first_commit],
                         ignore_errors=True)
@@ -36,7 +43,7 @@ class GitClient(SCMClient):
         if self.options.guess_description and not self.options.description:
             self.options.description = execute(
                 [self.git, "log", "--pretty=format:%s%n%n%b",
-                 description_log_revrange],
+                 "%s..%s" % (start, end)],
                 ignore_errors=True).strip()
 
 
@@ -264,15 +271,7 @@ class GitClient(SCMClient):
             diff_lines = self.make_diff(self.merge_base, self.head_ref)
             parent_diff_lines = None
 
-        # To guess the summary, we want the first commit on our branch
-        # *after* the merge base.  It's the first word printed in the
-        # below command (the second word will be the merge-base).
-        child_of_merge_base = execute([self.git, "rev-list",
-                                       "--reverse", "--parents",
-                                       "^%s" % (parent_branch or self.merge_base),
-                                       self.head_ref]).split(' ', 2)[0]
-        self._set_guesses(child_of_merge_base,
-                          (parent_branch or self.merge_base) + "..")
+        self._set_guesses((parent_branch or self.merge_base), "HEAD")
 
         return (diff_lines, parent_diff_lines)
 
@@ -375,7 +374,7 @@ class GitClient(SCMClient):
                 parent_diff_lines = self.make_diff(self.merge_base,
                                                    revision_range)
 
-            self._set_guesses(revision_range, revision_range + "..")
+            self._set_guesses(revision_range, "HEAD")
 
             return (self.make_diff(revision_range), parent_diff_lines)
         else:
@@ -389,6 +388,6 @@ class GitClient(SCMClient):
             if not pdiff_required:
                 parent_diff_lines = self.make_diff(self.merge_base, r1)
 
-            self._set_guesses(r1, "%s..%s" % (r1, r2))
+            self._set_guesses(r1, r2)
 
             return (self.make_diff(r1, r2), parent_diff_lines)
