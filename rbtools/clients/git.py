@@ -66,10 +66,13 @@ class GitClient(SCMClient):
             return url    # probably not a github url
         # The code in postreview.py wants this to be a list, not a tuple/etc.
         return ['http://github.com/%s' % m.group('repos'),
+                'http://github.com/%s.git' % m.group('repos'),
                 'https://github.com/%s' % m.group('repos'),
+                'https://github.com/%s.git' % m.group('repos'),
                 'git://github.com/%s' % m.group('repos'),
                 'git://github.com/%s.git' % m.group('repos'),
-                '
+                'git@github.com:%s' % m.group('repos'),
+                'git@github.com:%s.git' % m.group('repos'),
                 ]
 
     def get_repository_info(self):
