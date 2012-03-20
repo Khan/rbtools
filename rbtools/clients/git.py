@@ -41,8 +41,9 @@ class GitClient(SCMClient):
             self.options.summary = s.replace('\n', ' ').strip()
 
         if self.options.guess_description and not self.options.description:
+            # --reverse makes it so the logs go from older to newer.
             self.options.description = execute(
-                [self.git, "log", "--pretty=format:%s%n%n%b",
+                [self.git, "log", "--reverse", "--pretty=format:%s%n%n%b",
                  "%s..%s" % (start_rev, end_rev)],
                 ignore_errors=True).strip()
 
