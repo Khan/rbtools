@@ -1,0 +1,12 @@
+#!/bin/sh
+
+: ${PYTHON:=python2.7}
+: ${RBTOOLS_ROOT:=`dirname "$0"`/..}
+
+# Make sure we're using the most up-to-date version of post-review.
+# Since this takes a few seconds, we only do it once a day.
+if [ -z `find /tmp/post-review.pull -mtime -24 2>/dev/null` ]; then
+  ( cd "$RBTOOLS_ROOT" && git pull >/dev/null && touch /tmp/post-review.pull )
+fi
+
+$PYTHON "$RBTOOLS_ROOT/rbtools/postreview.py" "$@"
