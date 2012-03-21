@@ -47,6 +47,28 @@ class GitClient(SCMClient):
                  "%s..%s" % (start_rev, end_rev)],
                 ignore_errors=True).strip()
 
+    def update_last_commit_with_reviewer_info(self, options, review_url):
+        """ Use git commit --amend to add Reviewed-by: to each commit """
+        reviewed_by = "Reviewed-By: "
+        if options.target_people:
+            reviewed_by += options.target_people
+        if options.target_people and options.target_groups:
+            reviewed_by += " and "
+        if options.target_groups:
+            reviewed_by += "groups:" + options.target_groups
+        if not reviewed_by:    # shouldn't happen, but just in case...
+            return True        # I guess it succeeded, since it's a no-op
+        reviewed_by += ' <%s>' % review_url
+
+        # TODO(csilvers): shell-escape any nasty characters.
+        # Use perl to delete any old Reviewed-By messages and insert a new one
+        perlcmd = ("print unless /Reviewed-By: /i; "
+                   "if (eof) { print; print q{%s} }" % reviewed_by)
+        output = execute([self.git, "commit", "--amend"],
+                         env={"GIT_EDITOR":
+                              r'sh -c "perl -nli -e \"%s\" \"$1\""' % perlcmd},
+                         ignore_errors=True, none_on_ignored_error=True)
+        return output is not None
 
     def _github_paths(self, url):
         """ Given one github path, return a list of all of them """
@@ -209,7 +231,8 @@ class GitClient(SCMClient):
         if url:
             self.type = "git"
             return RepositoryInfo(path=self._github_paths(url), base_path='',
-                                  supports_parent_diffs=True)
+                                  supports_parent_diffs=True,
+                                  supports_updating_commit=True)
 
         return None
 
