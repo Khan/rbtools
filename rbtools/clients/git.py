@@ -51,9 +51,9 @@ class GitClient(SCMClient):
     def _github_paths(self, url):
         """ Given one github path, return a list of all of them """
         github_re = re.compile(r'('
-                               r'git@github.com/|'
                                r'http://([^@]+@)?github.com/|'
                                r'https://([^@]+@)?github.com/|'
+                               r'git://github.com/|'
                                r'git@github.com:'
                                r')'
                                r'(?P<repos>.*?)(.git)?$')
