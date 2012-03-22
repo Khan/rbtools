@@ -49,16 +49,14 @@ class GitClient(SCMClient):
 
     def update_last_commit_with_reviewer_info(self, options, review_url):
         """ Use git commit --amend to add Reviewed-by: to each commit """
-        reviewed_by = "Reviewed-By: "
+        reviewed_by = "Reviewed-By:"
         if options.target_people:
-            reviewed_by += options.target_people
+            reviewed_by += " " + options.target_people
         if options.target_people and options.target_groups:
-            reviewed_by += " and "
+            reviewed_by += " and"
         if options.target_groups:
-            reviewed_by += "groups:" + options.target_groups
-        if not reviewed_by:    # shouldn't happen, but just in case...
-            return True        # I guess it succeeded, since it's a no-op
-        reviewed_by += ' <%s>' % review_url
+            reviewed_by += " groups:" + options.target_groups
+        reviewed_by += " <%s>" % review_url
 
         # TODO(csilvers): shell-escape any nasty characters.
         # Use perl to delete any old Reviewed-By messages and insert a new one
