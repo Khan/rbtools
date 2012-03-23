@@ -1310,10 +1310,11 @@ def main():
     # If possible, update the latest change to say it's being reviewed.
     # TODO(csilvers): control whether this is done, with a flag.
     if repository_info.supports_updating_commits and review_url:
-        if tool.update_commits_with_reviewer_info(options, review_url):
-            print "(Successfully updated last commit with reviewer info.)"
+        num_updates = tool.update_commits_with_reviewer_info(options, review_url)
+        if num_updates:
+            print "(Updated %s commits with reviewer info.)" % num_updates
         else:
-            print "NOTE: Error trying to update last commit with reviewer info."
+            print "NOTE: Unable to update any commits with reviewer info."
 
     # Load the review up in the browser if requested to:
     if options.open_browser:
