@@ -90,7 +90,8 @@ class GitClient(SCMClient):
                     reviewed_by = line
                     # We don't need to update this commit because we
                     # know it's reviewed-by text is already "right".
-                    commits = commits[:-1]   # small optimization
+                    commits = commits[:-1]       # small optimization
+                    num_successful_updates += 1  # count as a "null update"
                     break
 
         # TODO(csilvers): shell-escape any nasty characters.
