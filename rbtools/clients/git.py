@@ -73,6 +73,21 @@ class GitClient(SCMClient):
             reviewed_by += " groups:" + options.target_groups
         reviewed_by += " <%s>" % review_url
 
+        # When post-review is done with -r, the first commits here
+        # will have already been updated with reviewer info.  In fact,
+        # they may even have better information than we do, since they
+        # are more likely to have had the reviewers specified.  So if
+        # we see an existing commit with reviewer info, prefer that to
+        # our own reviewed-by test.
+        output = execute([self.git, "notes", "show", commits[0]],
+                         with_errors=True, ignore_errors=True,
+                         none_on_ignored_error=True)
+        if output:
+            for line in output.splitlines():
+                if line.startswith('Reviewed-By: ') and review_url in line:
+                    reviewed_by = line
+                    break
+
         # TODO(csilvers): shell-escape any nasty characters.
         # Use perl to delete any old Reviewed-By messages and insert a new one
         perlcmd = ("print unless /Reviewed-By: /i; "
