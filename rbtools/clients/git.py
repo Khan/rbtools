@@ -73,13 +73,15 @@ class GitClient(SCMClient):
             reviewed_by += " groups:" + options.target_groups
         reviewed_by += " <%s>" % review_url
 
-        # When post-review is done with -r, the first commits here
-        # will have already been updated with reviewer info.  In fact,
-        # they may even have better information than we do, since they
-        # are more likely to have had the reviewers specified.  So if
-        # we see an existing commit with reviewer info, prefer that to
-        # our own reviewed-by test.
-        output = execute([self.git, "notes", "show", commits[0]],
+        # When post-review is run with -r, the first commits in our
+        # revrange will have already been updated with reviewer info
+        # (from previous calls to post-review for this review).  In
+        # fact, the early commits may even have better reviewed-by
+        # information than we do, since they are more likely to have
+        # had the reviewers specified on the commandline when
+        # post-review was run.  So if we see an existing commit with
+        # reviewed-by info, prefer that to our own reviewed-by text.
+        output = execute([self.git, "notes", "show", commits[-1]],
                          with_errors=True, ignore_errors=True,
                          none_on_ignored_error=True)
         if output:
