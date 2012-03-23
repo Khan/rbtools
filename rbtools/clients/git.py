@@ -53,6 +53,8 @@ class GitClient(SCMClient):
 
     def update_commits_with_reviewer_info(self, options, review_url):
         """ Use git commit --amend to add Reviewed-by: to each commit """
+        num_successful_updates = 0
+
         if not self.rev_range_for_diff:
             return 0    # don't know what commits to update, so bail.
         # Get the list of commits we want to update.
@@ -99,7 +101,6 @@ class GitClient(SCMClient):
         perlcmd = ("print unless /Reviewed-By: /i; "
                    "if (eof) { print; print q{%s} }" % reviewed_by)
         git_editor_cmd = r'sh -c "perl -nli -e \"%s\" \"$1\""' % perlcmd
-        num_successful_updates = 0
         for commit in commits:
             output = execute([self.git, "notes", "edit", commit],
                              env={"GIT_EDITOR": git_editor_cmd},
