@@ -1308,14 +1308,9 @@ def main():
                             submit_as=options.submit_as)
 
     # If possible, update the latest change to say it's being reviewed.
-    # TODO(csilvers): support even when a revision is explicitly specified.
-    # TODO(csilvers): update all commits we're uploading, not just the last.
     # TODO(csilvers): control whether this is done, with a flag.
-    if (repository_info.supports_updating_commit and review_url and
-        (not options.revision_range and
-         not options.svn_changelist and
-         not options.diff_filename)):
-        if tool.update_last_commit_with_reviewer_info(options, review_url):
+    if repository_info.supports_updating_commits and review_url:
+        if tool.update_commits_with_reviewer_info(options, review_url):
             print "(Successfully updated last commit with reviewer info.)"
         else:
             print "NOTE: Error trying to update last commit with reviewer info."

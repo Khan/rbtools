@@ -19,13 +19,17 @@ class GitClient(SCMClient):
         # Store the 'correct' way to invoke git, just plain old 'git' by
         # default.
         self.git = 'git'
+        # This is used to communicate the revisions in the diff to
+        # update_commits_with_reviewer_info().
+        self.rev_range_for_diff = None
 
     def _strip_heads_prefix(self, ref):
         """ Strips prefix from ref name, if possible """
         return re.sub(r'^refs/heads/', '', ref)
 
-    def _set_guesses(self, start_rev, end_rev):
+    def _set_guesses(self, rev_range):
         """ Sets summary/descr/etc if needed and --guess-foo is specified """
+        start_rev, end_rev = rev_range
         if self.options.guess_summary and not self.options.summary:
             # Merge ranges are specified (start_rev, end_rev] -- that
             # is, everything *after* start_rev.  We want the summary,
@@ -34,7 +38,7 @@ class GitClient(SCMClient):
             first_commit = execute([self.git, "rev-list", "--reverse",
                                     "--parents", "^%s" % start_rev,
                                     self.head_ref]).split(' ', 2)[0]
-            # I believe "foo ^foo^ is the syntax for *only* printing foo's msg.
+            # "foo ^foo^ is the syntax for *only* printing foo's msg.
             s = execute([self.git, "log", "--no-merges", "--pretty=format:%s",
                          first_commit, "^%s^" % first_commit],
                         ignore_errors=True)
@@ -47,8 +51,18 @@ class GitClient(SCMClient):
                  "%s..%s" % (start_rev, end_rev)],
                 ignore_errors=True).strip()
 
-    def update_last_commit_with_reviewer_info(self, options, review_url):
+    def update_commits_with_reviewer_info(self, options, review_url):
         """ Use git commit --amend to add Reviewed-by: to each commit """
+        if not self.rev_range_for_diff:
+            return 0    # don't know what commits to update, so bail.
+        # Get the list of commits we want to update.
+        commits = execute([self.git, "rev-list",
+                           "..".join(self.rev_range_for_diff)],
+                          ignore_errors=True, none_on_ignored_error=True,
+                          split_lines=True) 
+        if not commits:
+            return 0    # illegal commit-range
+
         reviewed_by = "Reviewed-By:"
         if options.target_people:
             reviewed_by += " " + options.target_people
@@ -62,11 +76,15 @@ class GitClient(SCMClient):
         # Use perl to delete any old Reviewed-By messages and insert a new one
         perlcmd = ("print unless /Reviewed-By: /i; "
                    "if (eof) { print; print q{%s} }" % reviewed_by)
-        output = execute([self.git, "commit", "--amend"],
-                         env={"GIT_EDITOR":
-                              r'sh -c "perl -nli -e \"%s\" \"$1\""' % perlcmd},
-                         ignore_errors=True, none_on_ignored_error=True)
-        return output is not None
+        num_successful_updates = 0
+        for commit in commits:
+            output = execute([self.git, "notes", "edit", commit],
+                             env={"GIT_EDITOR":
+                                  r'sh -c "perl -nli -e \"%s\" \"$1\""' % perlcmd},
+                             ignore_errors=True, none_on_ignored_error=True)
+            if output is not None:
+                num_successful_updates += 1
+        return num_successful_updates
 
     def _github_paths(self, url):
         """ Given one github path, return a list of all of them """
@@ -238,7 +256,7 @@ class GitClient(SCMClient):
             self.type = "git"
             return RepositoryInfo(path=self._github_paths(url), base_path='',
                                   supports_parent_diffs=True,
-                                  supports_updating_commit=True)
+                                  supports_updating_commits=True)
 
         return None
 
@@ -310,7 +328,8 @@ class GitClient(SCMClient):
             diff_lines = self.make_diff(self.merge_base, self.head_ref)
             parent_diff_lines = None
 
-        self._set_guesses((parent_branch or self.merge_base), "HEAD")
+        self.rev_range_for_diff = ((parent_branch or self.merge_base), "HEAD")
+        self._set_guesses(self.rev_range_for_diff)
 
         return (diff_lines, parent_diff_lines)
 
@@ -413,7 +432,8 @@ class GitClient(SCMClient):
                 parent_diff_lines = self.make_diff(self.merge_base,
                                                    revision_range)
 
-            self._set_guesses(revision_range, "HEAD")
+            self.rev_range_for_diff = (revision_range, "HEAD")
+            self._set_guesses(self.rev_range_for_diff)
 
             return (self.make_diff(revision_range), parent_diff_lines)
         else:
@@ -427,6 +447,7 @@ class GitClient(SCMClient):
             if not pdiff_required:
                 parent_diff_lines = self.make_diff(self.merge_base, r1)
 
-            self._set_guesses(r1, r2)
+            self.rev_range_for_diff = (r1, r2)
+            self._set_guesses(self.rev_range_for_diff)
 
             return (self.make_diff(r1, r2), parent_diff_lines)

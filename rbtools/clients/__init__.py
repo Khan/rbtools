@@ -92,12 +92,12 @@ class RepositoryInfo(object):
     A representation of a source code repository.
     """
     def __init__(self, path=None, base_path=None, supports_changesets=False,
-                 supports_parent_diffs=False, supports_updating_commit=False):
+                 supports_parent_diffs=False, supports_updating_commits=False):
         self.path = path
         self.base_path = base_path
         self.supports_changesets = supports_changesets
         self.supports_parent_diffs = supports_parent_diffs
-        self.supports_updating_commit = supports_updating_commit
+        self.supports_updating_commits = supports_updating_commits
         logging.debug("repository info: %s" % self)
 
     def __str__(self):
