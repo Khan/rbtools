@@ -62,6 +62,7 @@ class GitClient(SCMClient):
                           split_lines=True) 
         if not commits:
             return 0    # illegal commit-range
+        commits = [c.strip() for c in commits]
 
         reviewed_by = "Reviewed-By:"
         if options.target_people:
@@ -76,12 +77,13 @@ class GitClient(SCMClient):
         # Use perl to delete any old Reviewed-By messages and insert a new one
         perlcmd = ("print unless /Reviewed-By: /i; "
                    "if (eof) { print; print q{%s} }" % reviewed_by)
+        git_editor_cmd = r'sh -c "perl -nli -e \"%s\" \"$1\""' % perlcmd
         num_successful_updates = 0
         for commit in commits:
             output = execute([self.git, "notes", "edit", commit],
-                             env={"GIT_EDITOR":
-                                  r'sh -c "perl -nli -e \"%s\" \"$1\""' % perlcmd},
-                             ignore_errors=True, none_on_ignored_error=True)
+                             env={"GIT_EDITOR": git_editor_cmd},
+                             with_errors=True, ignore_errors=True,
+                             none_on_ignored_error=True)
             if output is not None:
                 num_successful_updates += 1
         return num_successful_updates

@@ -31,9 +31,9 @@ def execute(command,
     Utility function to execute a command and return the output.
     """
     if isinstance(command, list):
-        logging.debug(subprocess.list2cmdline(command))
+        logging.debug('Running: ' + subprocess.list2cmdline(command))
     else:
-        logging.debug(command)
+        logging.debug('Running: ' + command)
 
     if env:
         env.update(os.environ)
@@ -75,7 +75,7 @@ def execute(command,
     if rc and not ignore_errors and rc not in extra_ignore_errors:
         die('Failed to execute command: %s\n%s' % (command, data))
     elif rc:
-        logging.debug('Error executing command: %s\n%s---\n' % (command, data))
+        logging.debug('Error executing command: %s\n%s---' % (command, data))
 
     if rc and none_on_ignored_error:
         return None
