@@ -88,6 +88,9 @@ class GitClient(SCMClient):
             for line in output.splitlines():
                 if line.startswith('Reviewed-By: ') and review_url in line:
                     reviewed_by = line
+                    # We don't need to update this commit because we
+                    # know it's reviewed-by text is already "right".
+                    commits = commits[:-1]   # small optimization
                     break
 
         # TODO(csilvers): shell-escape any nasty characters.
