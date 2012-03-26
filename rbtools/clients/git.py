@@ -58,7 +58,7 @@ class GitClient(SCMClient):
         if not self.rev_range_for_diff:
             return 0    # don't know what commits to update, so bail.
         # Get the list of commits we want to update.
-        commits = execute([self.git, "rev-list",
+        commits = execute([self.git, "rev-list", "--reverse",
                            "..".join(self.rev_range_for_diff)],
                           ignore_errors=True, none_on_ignored_error=True,
                           split_lines=True) 
@@ -83,7 +83,7 @@ class GitClient(SCMClient):
         # had the reviewers specified on the commandline when
         # post-review was run.  So if we see an existing commit with
         # reviewed-by info, prefer that to our own reviewed-by text.
-        output = execute([self.git, "notes", "show", commits[-1]],
+        output = execute([self.git, "notes", "show", commits[0]],
                          with_errors=True, ignore_errors=True,
                          none_on_ignored_error=True)
         if output:
@@ -92,7 +92,7 @@ class GitClient(SCMClient):
                     reviewed_by = line
                     # We don't need to update this commit because we
                     # know it's reviewed-by text is already "right".
-                    commits = commits[:-1]       # small optimization
+                    commits = commits[1:]        # small optimization
                     num_successful_updates += 1  # count as a "null update"
                     break
 
