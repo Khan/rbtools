@@ -2,6 +2,7 @@
 import base64
 import cookielib
 import getpass
+import logging
 import mimetools
 import os
 import re
@@ -1149,7 +1150,6 @@ def parse_options(args):
     (globals()["options"], args) = parser.parse_args(args)
 
     if options.debug:
-        import logging
         logging.getLogger().setLevel(logging.DEBUG)
 
     if options.description and options.description_file:
