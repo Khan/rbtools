@@ -126,7 +126,7 @@ class MercurialClient(SCMClient):
         Extracts the first line from the description of the given changeset.
         """
         return execute(['hg', 'log', '-r%s' % revision, '--template',
-                        r'{desc|firstline}\n'], env=self._hg_env)
+                        r'{desc|firstline}'], env=self._hg_env)
 
     def extract_description(self, rev1, rev2):
         """
@@ -217,7 +217,7 @@ class MercurialClient(SCMClient):
             bottom_rev = None
 
         if self.options.guess_summary and not self.options.summary:
-            self.options.summary = self.extract_summary(top_rev).rstrip("\n")
+            self.options.summary = self.extract_summary(top_rev)
 
         if self.options.guess_description and not self.options.description:
             self.options.description = self.extract_description(bottom_rev,
@@ -249,7 +249,12 @@ class MercurialClient(SCMClient):
             if not pair.strip():
                 continue
 
-            branch, rev = pair.strip().split('\n')
+            lines = pair.strip().split('\n')
+            # Ignore warning messages that hg might put in, such as
+            # "warning: certificate for foo can't be verified (Python too old)"
+            while lines and lines[0].startswith('warning: '):
+                lines = lines[1:]
+            branch, rev = lines
 
             branch_name = branch[len('b:'):].strip()
             branch_name = branch_name or 'default'
