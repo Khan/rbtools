@@ -114,11 +114,7 @@ class MercurialClient(SCMClient):
 
     def _load_hgrc(self):
         for line in execute(['hg', 'showconfig'], split_lines=True):
-            try:
-                key, value = line.split('=', 1)
-            except ValueError:     # means we're just 'key ='
-                key = line.split('=', 1)[0]
-                value = ''
+            key, value = line.split('=', 1)
             self.hgrc[key] = value.strip()
 
     def extract_summary(self, revision):
