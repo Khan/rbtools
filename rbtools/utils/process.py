@@ -75,7 +75,8 @@ def execute(command,
     if rc and not ignore_errors and rc not in extra_ignore_errors:
         die('Failed to execute command: %s\n%s' % (command, data))
     elif rc:
-        logging.debug('Error executing command: %s\n%s---' % (command, data))
+        logging.debug('Command exited with rc %s: %s\n%s---'
+                      % (rc, command, data))
 
     if rc and none_on_ignored_error:
         return None
