@@ -734,7 +734,7 @@ class ReviewBoardServer(object):
         }
 
         try:
-            r = HTTPRequest(url, body, headers, method='PUT')
+            r = HTTPRequest(str(url), body, headers, method='PUT')
             data = urllib2.urlopen(r).read()
             try:
                 self.cookie_jar.save(self.cookie_file)
